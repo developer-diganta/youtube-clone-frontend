@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
 
 export default function Uploader() {
@@ -51,6 +52,42 @@ export default function Uploader() {
         };
     }, [thumbnails]);
 
+    const submitVideo = async () => {
+        if (!video) {
+            alert("Please select a video file to upload.");
+            return;
+        }
+
+        const token = localStorage.getItem("authToken"); // Retrieve token from localStorage
+
+        const formData = new FormData();
+        formData.append("videoFile", video); // Append video file
+        formData.append("title", videoTitle);
+        formData.append("description", "sample description");
+        formData.append("public", true);
+        formData.append("comments", true);
+
+        // Append thumbnails
+        thumbnails.forEach((thumbnail, index) => {
+            console.log(index)
+            formData.append(`thumbnails`, thumbnail.file);
+        });
+
+        try {
+            const response = await axios.post("http://localhost:3000/api/v1/video/upload", formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Send token in Authorization header
+                    "Content-Type": "multipart/form-data", // Required for file uploads
+                },
+            });
+
+            console.log("Upload successful:", response.data);
+        } catch (error) {
+            console.error("Upload failed:", error.response?.data || error.message);
+        }
+    };
+
+
     return (
         <div className="p-6 mx-auto">
             <div className="text-2xl font-bold mb-4">
@@ -66,7 +103,7 @@ export default function Uploader() {
                         <div className="label">
                             <span className="label-text text-md">Upload file</span>
                         </div>
-                        <input type="file" className="file-input file-input-bordered w-full" onChange={handleVideoUpload} />
+                        <input type="file" className="file-input file-input-bordered w-full" accept="video/*" onChange={handleVideoUpload} />
                     </label>
                 </div>
 
@@ -131,7 +168,7 @@ export default function Uploader() {
                         <input type="checkbox" className="toggle" defaultChecked />
                     </span>
 
-         
+
 
                     {/* <div className="form-control">
                         <label className="label cursor-pointer">
@@ -140,9 +177,9 @@ export default function Uploader() {
                         </label>
                     </div> */}
                 </div>
-            <div>
-                <button className="btn btn-outline btn-primary">Submit</button>
-            </div>
+                <div>
+                    <button className="btn btn-outline btn-primary" onClick={submitVideo}>Submit</button>
+                </div>
             </div>
 
         </div>
